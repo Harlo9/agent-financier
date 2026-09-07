@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Financier IA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8f8f8;
+      color: #1a1a1a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-app-region: drag;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 38px;
+    }
+    .header-dot { width: 10px; height: 10px; border-radius: 50%; background: #1D9E75; flex-shrink: 0; }
+    .header h1 { font-size: 15px; font-weight: 600; color: #1a1a1a; flex: 1; }
+    .header-badge { font-size: 11px; color: #1D9E75; background: #e1f5ee; padding: 3px 9px; border-radius: 99px; }
+    .header-btn {
+      -webkit-app-region: no-drag;
+      font-size: 12px;
+      padding: 5px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: transparent;
+      color: #666;
+      cursor: pointer;
+    }
+    .header-btn:hover { background: #f0f0f0; }
+
+    /* ── TABS ── */
+    .tabs {
+      -webkit-app-region: no-drag;
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 0 16px;
+      gap: 4px;
+    }
+    .tab {
+      font-size: 13px;
+      padding: 8px 14px;
+      border: none;
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab.active { color: #1a1a1a; font-weight: 500; border-bottom-color: #1D9E75; }
+
+    /* ── VIEWS ── */
+    .view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .view.active { display: flex; }
+
+    /* ── CHAT ── */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-app-region: no-drag;
+    }
+    .msg-row { display: flex; }
+    .msg-row.user { justify-content: flex-end; }
+    .bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .bubble.user { background: #1a1a1a; color: #fff; border-bottom-right-radius: 4px; }
+    .bubble.ai { background: #fff; color: #1a1a1a; border: 1px solid #e8e8e8; border-bottom-left-radius: 4px; }
+    .bubble.ai.typing { color: #aaa; font-style: italic; }
+
+    .shortcuts { padding: 0 16px 10px; display: flex; gap: 6px; flex-wrap: wrap; -webkit-app-region: no-drag; }
+    .shortcut {
+      font-size: 12px; padding: 5px 12px;
+      border: 1px solid #e0e0e0; border-radius: 99px;
+      background: #fff; color: #555; cursor: pointer;
+    }
+    .shortcut:hover { background: #f5f5f5; }
+
+    .input-area {
+      -webkit-app-region: no-drag;
+      background: #fff;
+      border-top: 1px solid #e8e8e8;
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .input-area textarea {
+      flex: 1;
+      font-size: 14px;
+      padding: 9px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      background: #f8f8f8;
+      color: #1a1a1a;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.4;
+      max-height: 100px;
+    }
+    .input-area textarea:focus { border-color: #aaa; background: #fff; }
+    .send-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .send-btn:hover { background: #333; }
+    .send-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* ── RAPPORT ── */
+    .report-view { padding: 16px; flex: 1; overflow-y: auto; -webkit-app-region: no-drag; }
+    .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .report-header h2 { font-size: 15px; font-weight: 600; }
+    .btn-report {
+      font-size: 13px; padding: 7px 14px;
+      background: #1a1a1a; color: #fff;
+      border: none; border-radius: 9px; cursor: pointer;
+    }
+    .btn-report:hover { background: #333; }
+    .btn-report:disabled { background: #ccc; cursor: not-allowed; }
+    .report-content {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 12px;
+      padding: 16px; font-size: 14px; line-height: 1.7; color: #333;
+      white-space: pre-wrap;
+    }
+    .report-empty { text-align: center; color: #aaa; padding: 40px 20px; font-size: 14px; }
+    .report-date { font-size: 11px; color: #aaa; margin-bottom: 10px; }
+
+    /* ── PARAMÈTRES ── */
+    .settings-view { padding: 16px; flex: 1; overflow-y: auto; -webkit-app-region: no-drag; }
+    .settings-view h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 500; color: #666; margin-bottom: 5px; }
+    .field input {
+      width: 100%; font-size: 14px; padding: 9px 12px;
+      border: 1px solid #e0e0e0; border-radius: 9px;
+      background: #fff; color: #1a1a1a; outline: none;
+    }
+    .field input:focus { border-color: #aaa; }
+    .field-hint { font-size: 11px; color: #aaa; margin-top: 4px; }
+    .save-btn {
+      width: 100%; padding: 10px;
+      background: #1a1a1a; color: #fff;
+      border: none; border-radius: 9px; font-size: 14px;
+      cursor: pointer; margin-top: 8px;
+    }
+    .save-btn:hover { background: #333; }
+    .save-ok { color: #1D9E75; font-size: 13px; text-align: center; margin-top: 8px; display: none; }
+    .section-sep { font-size: 12px; font-weight: 600; color: #aaa; margin: 18px 0 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-dot"></div>
+  <h1>Agent Financier IA</h1>
+  <span class="header-badge">Actif</span>
+  <button class="header-btn" onclick="switchTab('settings')">⚙</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('chat')" id="tab-chat">💬 Chat</button>
+  <button class="tab" onclick="switchTab('report')" id="tab-report">📊 Résumé</button>
+  <button class="tab" onclick="switchTab('settings')" id="tab-settings">⚙️ Paramètres</button>
+</div>
+
+<!-- CHAT -->
+<div class="view active" id="view-chat">
+  <div class="messages" id="messages">
+    <div class="msg-row">
+      <div class="bubble ai">Bonjour ! 👋 Je suis votre agent financier IA. Je vous envoie un résumé chaque lundi matin et je suis disponible ici pour toutes vos questions. Comment puis-je vous aider ?</div>
+    </div>
+  </div>
+  <div class="shortcuts">
+    <button class="shortcut" onclick="quickSend('Que faire avec mon investissement ce mois-ci ?')">Ce mois-ci →</button>
+    <button class="shortcut" onclick="quickSend('Comment est mon allocation actuelle ?')">Mon allocation</button>
+    <button class="shortcut" onclick="quickSend('Est-ce le bon moment pour investir ?')">Bon moment ?</button>
+  </div>
+  <div class="input-area">
+    <textarea id="chat-input" rows="1" placeholder="Posez votre question financière..."
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+      oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
+  </div>
+</div>
+
+<!-- RAPPORT -->
+<div class="view" id="view-report">
+  <div class="report-view">
+    <div class="report-header">
+      <h2>Résumé hebdomadaire</h2>
+      <button class="btn-report" id="btn-report" onclick="generateReport()">Générer</button>
+    </div>
+    <div id="report-date" class="report-date"></div>
+    <div id="report-content" class="report-empty">
+      Cliquez sur "Générer" pour obtenir votre résumé de performance et conseils personnalisés, ou attendez le prochain envoi automatique chaque lundi à 8h.
+    </div>
+  </div>
+</div>
+
+<!-- PARAMÈTRES -->
+<div class="view" id="view-settings">
+  <div class="settings-view">
+    <h2>Paramètres</h2>
+
+    <div class="section-sep">API Claude</div>
+    <div class="field">
+      <label>Clé API Anthropic</label>
+      <input type="password" id="s-apikey" placeholder="sk-ant-...">
+      <div class="field-hint">Obtenez-la sur console.anthropic.com</div>
+    </div>
+
+    <div class="section-sep">Email (résumé hebdomadaire)</div>
+    <div class="field">
+      <label>Votre adresse Gmail</label>
+      <input type="email" id="s-email-from" placeholder="vous@gmail.com">
+    </div>
+    <div class="field">
+      <label>Mot de passe d'application Gmail</label>
+      <input type="password" id="s-email-pass" placeholder="xxxx xxxx xxxx xxxx">
+      <div class="field-hint">Créez un mot de passe d'app sur myaccount.google.com/apppasswords</div>
+    </div>
+    <div class="field">
+      <label>Envoyer le résumé à</label>
+      <input type="email" id="s-email-to" placeholder="destinataire@email.com">
+    </div>
+
+    <div class="section-sep">Votre portefeuille</div>
+    <div class="field">
+      <label>Investissement mensuel (€)</label>
+      <input type="number" id="s-amount" placeholder="300" min="10">
+    </div>
+    <div class="field">
+      <label>Valeur ETF Monde (€)</label>
+      <input type="number" id="s-v1" placeholder="6000" min="0">
+    </div>
+    <div class="field">
+      <label>Valeur ETF S&P 500 (€)</label>
+      <input type="number" id="s-v2" placeholder="4000" min="0">
+    </div>
+    <div class="field">
+      <label>Valeur Obligations / fonds € (€)</label>
+      <input type="number" id="s-v3" placeholder="2450" min="0">
+    </div>
+
+    <button class="save-btn" onclick="saveSettings()">Sauvegarder</button>
+    <div class="save-ok" id="save-ok">✓ Paramètres sauvegardés !</div>
+  </div>
+</div>
+
+<script>
+  // ── État ──────────────────────────────────────────────────────────────────
+  let conversationHistory = []
+  let isLoading = false
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+    document.getElementById('tab-' + name).classList.add('active')
+    document.getElementById('view-' + name).classList.add('active')
+    if (name === 'settings') loadSettings()
+  }
+
+  // ── Chat ──────────────────────────────────────────────────────────────────
+  function autoResize(el) {
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px'
+  }
+
+  function addBubble(text, role, typing = false) {
+    const messages = document.getElementById('messages')
+    const row = document.createElement('div')
+    row.className = 'msg-row' + (role === 'user' ? ' user' : '')
+    const bubble = document.createElement('div')
+    bubble.className = 'bubble ' + role + (typing ? ' typing' : '')
+    bubble.textContent = text
+    row.appendChild(bubble)
+    messages.appendChild(row)
+    messages.scrollTop = messages.scrollHeight
+    return bubble
+  }
+
+  async function sendMessage() {
+    if (isLoading) return
+    const input = document.getElementById('chat-input')
+    const text = input.value.trim()
+    if (!text) return
+
+    input.value = ''
+    input.style.height = 'auto'
+    addBubble(text, 'user')
+    conversationHistory.push({ role: 'user', content: text })
+
+    isLoading = true
+    document.getElementById('send-btn').disabled = true
+    const typingBubble = addBubble('...', 'ai', true)
+
+    const result = await window.api.sendMessage(conversationHistory)
+
+    if (result.error) {
+      typingBubble.textContent = '⚠️ ' + result.error
+      typingBubble.classList.remove('typing')
+    } else {
+      typingBubble.textContent = result.text
+      typingBubble.classList.remove('typing')
+      conversationHistory.push({ role: 'assistant', content: result.text })
+    }
+
+    isLoading = false
+    document.getElementById('send-btn').disabled = false
+    document.getElementById('messages').scrollTop = 999999
+  }
+
+  function quickSend(text) {
+    document.getElementById('chat-input').value = text
+    sendMessage()
+    switchTab('chat')
+  }
+
+  // ── Rapport ───────────────────────────────────────────────────────────────
+  async function generateReport() {
+    const btn = document.getElementById('btn-report')
+    const content = document.getElementById('report-content')
+    btn.disabled = true
+    btn.textContent = 'Génération...'
+    content.className = 'report-content'
+    content.textContent = 'Analyse en cours...'
+
+    const result = await window.api.triggerReport()
+    content.textContent = result
+
+    const now = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    document.getElementById('report-date').textContent = 'Généré le ' + now
+
+    btn.disabled = false
+    btn.textContent = 'Régénérer'
+  }
+
+  // ── Paramètres ────────────────────────────────────────────────────────────
+  async function loadSettings() {
+    const c = await window.api.getConfig()
+    document.getElementById('s-apikey').value = c.anthropicKey || ''
+    document.getElementById('s-email-from').value = c.emailFrom || ''
+    document.getElementById('s-email-pass').value = c.emailPassword || ''
+    document.getElementById('s-email-to').value = c.emailTo || ''
+    document.getElementById('s-amount').value = c.investmentAmount || 300
+    if (c.portfolio) {
+      document.getElementById('s-v1').value = c.portfolio[0]?.currentValue || ''
+      document.getElementById('s-v2').value = c.portfolio[1]?.currentValue || ''
+      document.getElementById('s-v3').value = c.portfolio[2]?.currentValue || ''
+    }
+  }
+
+  async function saveSettings() {
+    const config = {
+      anthropicKey: document.getElementById('s-apikey').value.trim(),
+      emailFrom: document.getElementById('s-email-from').value.trim(),
+      emailPassword: document.getElementById('s-email-pass').value.trim(),
+      emailTo: document.getElementById('s-email-to').value.trim(),
+      investmentAmount: parseInt(document.getElementById('s-amount').value) || 300,
+      portfolio: [
+        { name: 'ETF MSCI World (CW8)', allocation: 50, currentValue: parseFloat(document.getElementById('s-v1').value) || 0 },
+        { name: 'ETF S&P 500 (PE500)', allocation: 30, currentValue: parseFloat(document.getElementById('s-v2').value) || 0 },
+        { name: 'Fonds euros / Obligations', allocation: 20, currentValue: parseFloat(document.getElementById('s-v3').value) || 0 }
+      ]
+    }
+    await window.api.saveConfig(config)
+    const ok = document.getElementById('save-ok')
+    ok.style.display = 'block'
+    setTimeout(() => ok.style.display = 'none', 2500)
+  }
+
+  // ── Événements depuis le main process ─────────────────────────────────────
+  window.api.onWeeklyReport((data) => {
+    document.getElementById('report-content').textContent = data
+    document.getElementById('report-content').className = 'report-content'
+    const now = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+    document.getElementById('report-date').textContent = 'Résumé du ' + now
+  })
+
+  window.api.onOpenSettings(() => switchTab('settings'))
+</script>
+</body>
+</html>
